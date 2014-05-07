@@ -9,10 +9,10 @@ TARGET=iRateLib
 all: MTiRate.dll
 
 external/iRate : clean
-	#git clone https://github.com/nicklockwood/iRate.git external/iRate
-	#git --git-dir=external/iRate/.git  checkout d20486c9a2f7b
-	git clone https://github.com/bholmes/iRate.git external/iRate
-	git --git-dir=external/iRate/.git checkout 54fe84306ea64908b
+	git clone https://github.com/nicklockwood/iRate.git external/iRate
+	git --git-dir=external/iRate/.git  checkout d20486c9a2f7b
+	#git clone https://github.com/bholmes/iRate.git external/iRate
+	#git --git-dir=external/iRate/.git checkout 54fe84306ea64908b
 
 libiRateLib-i386.a: external/iRate
 	$(XBUILD) -project $(PROJECT) -target $(TARGET) -sdk iphonesimulator -configuration Release clean build
@@ -22,9 +22,13 @@ libiRateLib-armv7.a: external/iRate
 	$(XBUILD) -project $(PROJECT) -target $(TARGET) -sdk iphoneos -arch armv7 -configuration Release clean build
 	-mv $(PROJECT_ROOT)/build/Release-iphoneos/lib$(TARGET).a $@
 
-libiRate.a: libiRateLib-i386.a libiRateLib-armv7.a
-	lipo -create -output $@ $^	
-
+libiRateLib-armv7s.a: external/iRate
+	$(XBUILD) -project $(PROJECT) -target $(TARGET) -sdk iphoneos -arch armv7s -configuration Release clean build
+	-mv $(PROJECT_ROOT)/build/Release-iphoneos/lib$(TARGET).a $@
+	
+libiRate.a: libiRateLib-i386.a libiRateLib-armv7.a libiRateLib-armv7s.a
+	lipo -create -output $@ $^
+	
 MTiRate.dll: Makefile AssemblyInfo.cs ApiDefinition.cs StructsAndEnums.cs libiRate.a
 	-mkdir -p ios
 	$(BTOUCH) -unsafe -d:DEBUG ApiDefinition.cs -s:StructsAndEnums.cs -tmpdir:ios -sourceonly:ios/sources.list
